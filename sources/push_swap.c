@@ -32,6 +32,7 @@ static int	send_nodes(t_data *data, int value)
 	data->stack_a_curr->next = node;
 	data->stack_a_curr = data->stack_a_curr->next;
 	data->count_nb += 1;
+	data->count_nb_a += 1;
 	return (0);
 }
 
@@ -56,24 +57,22 @@ static int	parse_flags(t_data *data, char *arg, int algo)
 
 static int	parse_args(t_data *data, int argc, char **argv)
 {
-	int	i;
-
-	i = 1;
-	while (i < argc)
+	data->i = 1;
+	while (data->i < argc)
 	{
-		if (ps_isnumber(argv[i]) == 1)
+		if (ps_isint(argv[data->i]) == 1)
 		{
-			if (send_nodes(data, ps_atoi(argv[i])) == -1)
+			if (send_nodes(data, (int)ps_atolli(argv[data->i])) == -1)
 				return (-1);
 		}
-		else if (ps_strncmp(argv[i], "--", 2) == 0)
+		else if (ps_strncmp(argv[data->i], "--", 2) == 0)
 		{
-			if (parse_flags(data, argv[i], data->algo_type) != 0)
+			if (parse_flags(data, argv[data->i], data->algo_type) != 0)
 				return (-1);
 		}
 		else
 			return (-1);
-		i++;
+		(data->i)++;
 	}
 	if (data->count_nb < 2)
 		return (-1);
@@ -84,17 +83,13 @@ static int	parse_args(t_data *data, int argc, char **argv)
 
 static int	init_data(t_data *data)
 {
-	data->stack_a_hook = (t_stack *)malloc(sizeof(*data->stack_a_hook));
-	if (!data->stack_a_hook)
+	if (ps_init_stacks(data) == -1)
 		return (-1);
-	data->stack_a_hook->next = NULL;
-	data->stack_b_hook = (t_stack *)malloc(sizeof(*data->stack_b_hook));
-	if (!data->stack_b_hook)
-		return (-1);
-	data->stack_b_hook->next = NULL;
 	data->algo_type = 0;
 	data->bench_mode = 0;
 	data->count_nb = 0;
+	data->count_nb_a = 0;
+	data->count_nb_b = 0;
 	data->count_ops = 0;
 	data->count_sa = 0;
 	data->count_sb = 0;
@@ -107,6 +102,7 @@ static int	init_data(t_data *data)
 	data->count_rra = 0;
 	data->count_rrb = 0;
 	data->count_rrr = 0;
+	data->max_progress = 0;
 	return (0);
 }
 
@@ -114,6 +110,7 @@ int	main(int argc, char **argv)
 {
 	t_data	data;
 
+	write(1, "\033[?25h", 6);
 	if (argc == 1)
 		return (0);
 	if (init_data(&data) == -1 || parse_args(&data, argc, argv) == -1)
@@ -123,7 +120,7 @@ int	main(int argc, char **argv)
 		write(2, "Error\n", 6);
 		return (-1);
 	}
-	push_swap_algochoice(&data);
+	ps_algochoice(&data);
 	ps_stack_clear((t_stack *)data.stack_a_hook);
 	ps_stack_clear((t_stack *)data.stack_b_hook);
 	return (0);

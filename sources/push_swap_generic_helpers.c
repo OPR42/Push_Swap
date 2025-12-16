@@ -12,11 +12,27 @@
 
 #include "push_swap.h"
 
-int	ps_atoi(const char *nptr)
+int	ps_intlen(int n)
 {
-	size_t			i;
-	unsigned int	n;
-	int				sign;
+	int	len;
+
+	if (n <= 0)
+		len = 1;
+	else
+		len = 0;
+	while (n != 0)
+	{
+		len++;
+		n = n / 10;
+	}
+	return (len);
+}
+
+long long	ps_atolli(const char *nptr)
+{
+	size_t				i;
+	unsigned long long	n;
+	int					sign;
 
 	i = 0;
 	n = 0;
@@ -39,7 +55,7 @@ int	ps_atoi(const char *nptr)
 	return (n * sign);
 }
 
-int	ps_isnumber(const char *nptr)
+int	ps_isint(const char *nptr)
 {
 	size_t			i;
 
@@ -52,6 +68,8 @@ int	ps_isnumber(const char *nptr)
 			return (0);
 		i++;
 	}
+	if (ps_atolli(nptr) > INT_MAX || ps_atolli(nptr) < INT_MIN)
+		return (0);
 	return (1);
 }
 

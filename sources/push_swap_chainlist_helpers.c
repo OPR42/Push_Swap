@@ -12,6 +12,30 @@
 
 #include "push_swap.h"
 
+int	ps_stack_not_progressive(t_stack *hook)
+{
+	t_stack	*current;
+	int		misplaced;
+
+	misplaced = 0;
+	current = hook->next;
+	while (current != hook)
+	{
+		if (current->next == hook)
+		{
+			if (current->value > current->next->next->value)
+				misplaced++;
+		}
+		else
+		{
+			if (current->value > current->next->value)
+				misplaced++;
+		}
+		current = current->next;
+	}
+	return (misplaced);
+}
+
 void	ps_stack_clear(t_stack *hook)
 {
 	t_stack	*current;
@@ -37,87 +61,16 @@ void	ps_stack_clear(t_stack *hook)
 	hook = NULL;
 }
 
-/*void	ps_lstadd_back(t_stack *lst, t_stack *new)
+int	ps_init_stacks(t_data *data)
 {
-	t_stack	*last;
-
-	if (!&lst || !new)
-		return ;
-	if (!lst)
-	{
-		lst = new;
-		return ;
-	}
-	last = ft_lstlast(lst);
-	new->previous = last;
-	last->next = new;
+	data->stack_a_hook = (t_stack *)malloc(sizeof(*data->stack_a_hook));
+	if (!data->stack_a_hook)
+		return (-1);
+	data->stack_a_hook->next = NULL;
+	data->stack_b_hook = (t_stack *)malloc(sizeof(*data->stack_b_hook));
+	if (!data->stack_b_hook)
+		return (-1);
+	data->stack_b_hook->next = data->stack_b_hook;
+	data->stack_b_hook->previous = data->stack_b_hook;
+	return (0);
 }
-
-void	ft_lstadd_front(t_list **lst, t_list *new)
-{
-	if (!lst || !new)
-		return ;
-	new->next = *lst;
-	*lst = new;
-}
-
-void	ft_lstdelone(t_list *lst, void (*del)(void *))
-{
-	if (!lst)
-		return ;
-	if (del)
-		del(lst->content);
-	free(lst);
-}
-
-
-void	ft_lstclear(t_list **lst, void (*del)(void *))
-{
-	t_list	*current;
-	t_list	*next;
-
-	if (!lst)
-		return ;
-	current = *lst;
-	while (current)
-	{
-		next = current->next;
-		ft_lstdelone(current, del);
-		current = next;
-	}
-	*lst = NULL;
-}
-
-_list	*ft_lstlast(t_list *lst)
-{
-	if (!lst)
-		return (NULL);
-	while (lst->next)
-		lst = lst->next;
-	return (lst);
-}
-
-t_list	*ft_lstnew(void *content)
-{
-	t_list	*node;
-
-	node = (t_list *)malloc(sizeof(*node));
-	if (!node)
-		return (NULL);
-	node->content = content;
-	node->next = NULL;
-	return (node);
-}
-
-int	ft_lstsize(t_list *lst)
-{
-	int	count;
-
-	count = 0;
-	while (lst)
-	{
-		count++;
-		lst = lst->next;
-	}
-	return (count);
-}*/
