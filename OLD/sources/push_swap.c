@@ -12,27 +12,44 @@
 
 #include "push_swap.h"
 
+static int	send_nodes(t_data *data, int value)
+{
+	t_stack	*node;
+
+	data->stack_a_curr = data->stack_a_hook;
+	while (data->stack_a_curr->next)
+	{
+		data->stack_a_curr = data->stack_a_curr->next;
+		if (data->stack_a_curr->value == value)
+			return (-1);
+	}
+	node = (t_stack *)malloc(sizeof(*node));
+	if (!node)
+		return (-1);
+	node->value = value;
+	node->next = NULL;
+	node->previous = data->stack_a_curr;
+	data->stack_a_curr->next = node;
+	data->stack_a_curr = data->stack_a_curr->next;
+	data->count_nb += 1;
+	data->count_nb_a += 1;
+	return (0);
+}
+
 static int	parse_flags(t_data *data, char *arg, int algo)
 {
-	short	b;
-
-	b = data->bench_mode;
-	if (ps_strncmp(arg, "--adaptive", 10) == 0 && (algo == 0 || algo == 5))
-		data->algo_type = 5;
+	if (ps_strncmp(arg, "--adaptative", 12) == 0)
+		data->algo_type = 0;
 	else if (ps_strncmp(arg, "--simple", 8) == 0 && (algo == 0 || algo == 1))
 		data->algo_type = 1;
 	else if (ps_strncmp(arg, "--medium", 8) == 0 && (algo == 0 || algo == 2))
 		data->algo_type = 2;
 	else if (ps_strncmp(arg, "--complex", 9) == 0 && (algo == 0 || algo == 3))
 		data->algo_type = 3;
-	else if (ps_strncmp(arg, "--custom", 8) == 0 && (algo == 0 || algo == 4))
-		data->algo_type = 4;
-	else if (ps_strncmp(arg, "--bench", 8) == 0 && b != 2 && b != 3)
+	else if (ps_strncmp(arg, "--bench", 8) == 0 && data->bench_mode != 2)
 		data->bench_mode = 1;
-	else if (ps_strncmp(arg, "--benchview", 12) == 0 && b != 1 && b != 3)
+	else if (ps_strncmp(arg, "--benchview", 12) == 0 && data->bench_mode != 1)
 		data->bench_mode = 2;
-	else if (ps_strncmp(arg, "--benchanim", 12) == 0 && b != 1 && b != 2)
-		data->bench_mode = 3;
 	else
 		return (-1);
 	return (0);
@@ -40,51 +57,25 @@ static int	parse_flags(t_data *data, char *arg, int algo)
 
 static int	parse_args(t_data *data, int argc, char **argv)
 {
-	int	i;
-
-	i = 0;
-	while (i < argc)
+	data->i = 1;
+	while (data->i < argc)
 	{
-		if (ps_isint(argv[i]) == 1)
+		if (ps_isint(argv[data->i]) == 1)
 		{
-			if (send_nodes(data, (int)ps_atolli(argv[i])) == -1)
+			if (send_nodes(data, (int)ps_atolli(argv[data->i])) == -1)
 				return (-1);
 		}
-		else if (ps_strncmp(argv[i], "--", 2) == 0)
+		else if (ps_strncmp(argv[data->i], "--", 2) == 0)
 		{
-			if (parse_flags(data, argv[i], data->algo_type) != 0)
+			if (parse_flags(data, argv[data->i], data->algo_type) != 0)
 				return (-1);
 		}
 		else
 			return (-1);
-		i++;
-	}
-	return (0);
-}
-
-static int	split_args(t_data *data, int argc, char **argv)
-{
-	int		i;
-	int		subargc;
-	char	**subargv;
-
-	i = 1;
-	while (i < argc)
-	{
-		subargv = ps_split(argv[i], ' ');
-		if (subargv == NULL)
-			return (ps_free_all(subargv, subargc), -1);
-		subargc = 0;
-		while (subargv[subargc])
-			subargc++;
-		if (subargc < 1 || parse_args(data, subargc, subargv) == -1)
-			return (ps_free_all(subargv, subargc), -1);
-		ps_free_all(subargv, subargc);
-		i++;
+		(data->i)++;
 	}
 	if (data->count_nb < 2)
 		return (-1);
-	ps_set_ranks(data, 0, 0);
 	data->stack_a_curr->next = data->stack_a_hook;
 	data->stack_a_hook->previous = data->stack_a_curr;
 	return (0);
@@ -119,21 +110,17 @@ int	main(int argc, char **argv)
 {
 	t_data	data;
 
+	write(1, "\033[?25h", 6);
 	if (argc == 1)
 		return (0);
-	if (init_data(&data) == -1 || split_args(&data, argc, argv) == -1)
+	if (init_data(&data) == -1 || parse_args(&data, argc, argv) == -1)
 	{
 		ps_stack_clear((t_stack *)data.stack_a_hook);
 		ps_stack_clear((t_stack *)data.stack_b_hook);
-		write(1, "\033[2J\033[?25l", 10);
-		write(1, "\033[?25h", 6);
-		write(1, "\033[0m", 4);
 		write(2, "Error\n", 6);
 		return (-1);
 	}
 	ps_algochoice(&data);
-	free(data.algo_name);
-	free(data.algo_class);
 	ps_stack_clear((t_stack *)data.stack_a_hook);
 	ps_stack_clear((t_stack *)data.stack_b_hook);
 	return (0);
